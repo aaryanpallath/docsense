@@ -63,7 +63,9 @@ jobs:
       - name: Build, tag, and push images to IBM Container Registry
         run: |
           docker build -t $ICR_REGISTRY/$ICR_NAMESPACE/$BACKEND_IMAGE:${{ github.sha }} ./backend
-          docker build -t $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }} ./frontend
+          docker build \
+            --build-arg VITE_API_BASE_URL="${{ secrets.VITE_API_BASE_URL }}" \
+            -t $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }} ./frontend
           docker push $ICR_REGISTRY/$ICR_NAMESPACE/$BACKEND_IMAGE:${{ github.sha }}
           docker push $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }}
 

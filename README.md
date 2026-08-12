@@ -143,6 +143,7 @@ On every push to `main` (`.github/workflows/ci.yml`):
 | `ANTHROPIC_API_KEY`          | Passed through to the deployed backend     |
 | `DATABASE_URL`               | Postgres connection string for the deployed backend |
 | `CORS_ORIGINS`               | Allowed origin(s) for the deployed frontend URL |
+| `VITE_API_BASE_URL`          | Deployed backend URL, baked into the frontend build at build time |
 
 ### Deploying to IBM Cloud Code Engine (one-time bootstrap)
 
