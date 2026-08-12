@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  ICR_REGISTRY: us.icr.io
+  ICR_REGISTRY: icr.io
   ICR_NAMESPACE: ${{ secrets.ICR_NAMESPACE }}
   BACKEND_IMAGE: docsense-backend
   FRONTEND_IMAGE: docsense-frontend

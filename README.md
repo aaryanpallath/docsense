@@ -7,8 +7,7 @@ sends document content to the Claude API for structured JSON extraction
 and a React frontend lets users review, correct, and save the extracted
 fields — a human-in-the-loop correction loop, not just a one-shot demo.
 
-**Live demo:** _not yet deployed — link goes here once Phase 1 deploy to IBM
-Cloud Code Engine is complete_
+**Live demo:** https://docsense-frontend.2dguyh5px15c.us-east.codeengine.appdomain.cloud
 
 ---
 
@@ -156,18 +155,21 @@ ibmcloud ce project create --name docsense
 ibmcloud ce project select --name docsense
 
 ibmcloud ce application create --name docsense-backend \
-  --image us.icr.io/<namespace>/docsense-backend:latest \
+  --image icr.io/<namespace>/docsense-backend:latest \
   --port 8000 \
   --env ANTHROPIC_API_KEY=<key> \
   --env DATABASE_URL=<postgres-url>
 
 ibmcloud ce application create --name docsense-frontend \
-  --image us.icr.io/<namespace>/docsense-frontend:latest \
+  --image icr.io/<namespace>/docsense-frontend:latest \
   --port 80
 ```
 
-Postgres can be provisioned via the IBM Cloud Databases for PostgreSQL Lite
-plan (or any Postgres instance reachable from Code Engine).
+IBM's own Databases for PostgreSQL has no free tier (paid "standard" plans
+only), so this project uses [Neon](https://neon.tech) instead — free tier,
+serverless Postgres, reachable from anywhere including Code Engine. Create a
+project there, grab the **pooled** connection string, and use that as
+`DATABASE_URL`.
 
 ---
 
