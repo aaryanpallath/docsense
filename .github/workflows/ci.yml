@@ -1,0 +1,82 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  ICR_REGISTRY: us.icr.io
+  ICR_NAMESPACE: ${{ secrets.ICR_NAMESPACE }}
+  BACKEND_IMAGE: docsense-backend
+  FRONTEND_IMAGE: docsense-frontend
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -v
+
+  build-images:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t $BACKEND_IMAGE:${{ github.sha }} ./backend
+
+      - name: Build frontend image
+        run: docker build -t $FRONTEND_IMAGE:${{ github.sha }} ./frontend
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install IBM Cloud CLI
+        run: |
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install container-registry -f
+          ibmcloud plugin install code-engine -f
+
+      - name: Log in to IBM Cloud
+        run: |
+          ibmcloud login --apikey "${{ secrets.IBM_CLOUD_API_KEY }}" -r "${{ secrets.IBM_CLOUD_REGION }}" -g "${{ secrets.IBM_CLOUD_RESOURCE_GROUP }}"
+          ibmcloud cr login
+
+      - name: Build, tag, and push images to IBM Container Registry
+        run: |
+          docker build -t $ICR_REGISTRY/$ICR_NAMESPACE/$BACKEND_IMAGE:${{ github.sha }} ./backend
+          docker build -t $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }} ./frontend
+          docker push $ICR_REGISTRY/$ICR_NAMESPACE/$BACKEND_IMAGE:${{ github.sha }}
+          docker push $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }}
+
+      # Assumes the Code Engine applications were already created once, manually
+      # (see README "Deploying to IBM Cloud Code Engine"). This step updates them
+      # to the freshly pushed image on every push to main.
+      - name: Deploy to Code Engine
+        run: |
+          ibmcloud ce project select --name "${{ secrets.CE_PROJECT }}"
+          ibmcloud ce application update --name docsense-backend \
+            --image $ICR_REGISTRY/$ICR_NAMESPACE/$BACKEND_IMAGE:${{ github.sha }} \
+            --env DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --env ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+            --env CORS_ORIGINS="${{ secrets.CORS_ORIGINS }}"
+          ibmcloud ce application update --name docsense-frontend \
+            --image $ICR_REGISTRY/$ICR_NAMESPACE/$FRONTEND_IMAGE:${{ github.sha }}
