@@ -174,9 +174,17 @@ project there, grab the **pooled** connection string, and use that as
 
 ---
 
-## Screenshot
+## Screenshots
 
-_Add a screenshot or GIF of the app here once deployed._
+**Upload a document** — drag-and-drop a PDF/image, or paste raw text:
+
+![Upload page](screenshots/upload.jpg)
+![Upload page with an image selected](screenshots/upload-image-selected.jpg)
+
+**Review and correct extracted fields** — human-in-the-loop correction, from both a pasted-text and an image upload:
+
+![Document detail with extracted and corrected fields](screenshots/detail-correction.jpg)
+![Document detail from an image-based extraction](screenshots/detail-image-extraction.jpg)
 
 ---
 
